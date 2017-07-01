@@ -1,0 +1,25 @@
+version: '2'
+services:
+ social-tournament-service:
+  build: .
+  image: social-tournament-service:latest
+  environment:
+    - NODE_ENV=production
+  ports:
+    - "8080:8080"
+  depends_on:
+    - postgres-db
+  networks:
+    - social-tournament-service-network
+ postgres-db:
+  image: "postgres:9.6.3-alpine"
+  environment:
+    - POSTGRES_PASSWORD=1234567890
+    - POSTGRES_DB=social_tournament_service
+  ports:
+    - "5432:5432"
+  networks:
+    - social-tournament-service-network
+
+networks:
+  social-tournament-service-network:

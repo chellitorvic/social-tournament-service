@@ -1,0 +1,50 @@
+{
+  "development": {
+    "host": "0.0.0.0",
+    "port": 8080,
+    "db": {
+      "dialect": "postgres",
+      "username": "postgres",
+      "password": "1234567890",
+      "database": "social_tournament_service",
+      "host": "192.168.99.100",
+      "pool": {
+        "max": 5,
+        "min": 0,
+        "idle": 10000
+      }
+    }
+  },
+  "test": {
+    "host": "0.0.0.0",
+    "port": 8080,
+    "db": {
+      "dialect": "postgres",
+      "username": "postgres",
+      "password": "1234567890",
+      "database": "social_tournament_service",
+      "host": "192.168.99.100",
+      "pool": {
+        "max": 5,
+        "min": 0,
+        "idle": 10000
+      }
+    }
+  },
+  "production": {
+    "host": "0.0.0.0",
+    "port": 8080,
+    "db": {
+      "dialect": "postgres",
+      "username": "postgres",
+      "password": "1234567890",
+      "database": "social_tournament_service",
+      "host": "postgres-db",
+      "pool": {
+        "max": 5,
+        "min": 0,
+        "idle": 10000
+      }
+    }
+  }
+}

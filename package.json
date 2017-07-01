@@ -1,0 +1,18 @@
+{
+  "name": "social-tournament-service",
+  "version": "0.0.0",
+  "description": "Backend developer coding task \"Social tournament service\"",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Victor Gomov",
+  "license": "ISC",
+  "dependencies": {
+    "hapi": "16.4.3",
+    "joi": "10.6.0",
+    "pg": "6.4.0",
+    "pg-hstore": "2.3.2",
+    "sequelize": "4.2.1"
+  }
+}
