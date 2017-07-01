@@ -1,8 +1,8 @@
 version: '2'
 services:
  social-tournament-service:
-  build: .
-  image: social-tournament-service:latest
+#  build: .
+  image: chellitorvic/social-tournament-service:latest
   environment:
     - NODE_ENV=production
   ports:
