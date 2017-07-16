@@ -1,8 +1,7 @@
 'use strict';
 
-
 module.exports = [].concat.apply([], [
   require('./tournament'),
-  require('./user'),
+  require('./player'),
   require('./db')
 ]);

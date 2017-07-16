@@ -9,7 +9,6 @@ RUN npm install
 
 COPY ./src /usr/src/app/src
 COPY ./config /usr/src/app/config
-COPY ./server.js /usr/src/app/
 
 ENV PORT 8080
 

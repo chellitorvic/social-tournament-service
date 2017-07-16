@@ -16,18 +16,22 @@ server.connection({
 
 server.route(routes);
 
-sync();
+if (!module.parent) {
+  sync(function () {
+    server.start(function () {
+      console.log('Server running at:', server.info.uri);
+    });
+  });
+}
 
-function sync() {
+function sync(callback) {
   models.sequelize
     .sync({force: isDev})
-    .then(function () {
-      server.start(function () {
-        console.log('Server running at:', server.info.uri);
-      });
-    })
+    .then(callback)
     .catch(() => {
       console.log('Unable connect to database, retrying...');
-      setTimeout(sync, 1000);
+      setTimeout(() => sync(callback), 1000);
     });
 }
+
+module.exports = server;
