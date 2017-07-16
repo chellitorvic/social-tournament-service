@@ -25,7 +25,7 @@ module.exports = [
           }
           return reply().code(404);
         })
-        .catch(() => reply().code(500))
+        .catch(() => reply().code(500));
     }
   },
 
@@ -57,9 +57,9 @@ module.exports = [
                 return reply().code(400);
               }
               return reply().code(404);
-            })
+            });
         })
-        .catch(() => reply().code(500))
+        .catch(() => reply().code(500));
     }
   },
 
@@ -84,12 +84,12 @@ module.exports = [
               if (!created) {
                 return user.update({balance: user.balance + points}, {transaction: t});
               }
-            })
+            });
         })
         .then(() => reply())
         .catch((err) => {
           return reply().code(500);
-        })
+        });
     }
   }
 ];
