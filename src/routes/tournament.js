@@ -136,6 +136,7 @@ module.exports = [
                     });
                   return Promise.all(givePrizes);
                 })
+                .then(() => tournament.destroy({transaction: t}))
                 .then(() => reply());
             })
         })
