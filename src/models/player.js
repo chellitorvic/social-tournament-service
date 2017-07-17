@@ -13,5 +13,14 @@ module.exports = function (sequelize, DataTypes) {
       }
     }
   });
+
+  Player.take = function take(playerId, points, options) {
+    return this.increment('balance', Object.assign({by: -points, where: {playerId}}, options));
+  };
+
+  Player.fund = function fund(playerId, points, options) {
+    return this.increment('balance', Object.assign({by: points, where: {playerId}}, options));
+  };
+
   return Player;
 };

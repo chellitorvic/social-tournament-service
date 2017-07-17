@@ -71,7 +71,7 @@ module.exports = [
                   }
                   return participation
                     .setBackers(backers, {transaction: t})
-                    .then(() => Promise.all(participants.map(p => p.update({balance: p.balance - part}, {transaction: t}))))
+                    .then(() => Promise.all(participants.map(p => Player.take(p.playerId, part, {transaction: t}))))
                     .then(() => {
                       return reply();
                     })
@@ -129,7 +129,7 @@ module.exports = [
                           const players = [player, ...backers];
                           const part = winnerPrizes[player.playerId] / players.length;
                           const updateBalances = players.map((player) => {
-                            return player.update({balance: player.balance + part}, {transaction: t});
+                            return Player.fund(player.playerId, part, {transaction: t});
                           });
                           return Promise.all(updateBalances);
                         });

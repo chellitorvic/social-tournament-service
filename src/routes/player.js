@@ -46,12 +46,12 @@ module.exports = [
         .transaction(function (t) {
           return Player
             .findById(playerId, {transaction: t})
-            .then((user) => {
-              if (user) {
-                const balance = user.balance;
+            .then((player) => {
+              if (player) {
+                const balance = player.balance;
                 if (balance - points >= 0) {
-                  return user
-                    .update({balance: balance - points}, {transaction: t})
+                  return Player
+                    .take(playerId, points, {transaction: t})
                     .then(() => reply());
                 }
                 return reply().code(400);
@@ -80,9 +80,9 @@ module.exports = [
         .transaction(function (t) {
           return Player
             .findOrCreate({where: {playerId}, defaults: {playerId, balance: points}, transaction: t})
-            .spread((user, created) => {
+            .spread((player, created) => {
               if (!created) {
-                return user.update({balance: user.balance + points}, {transaction: t});
+                return Player.fund(playerId, points, {transaction: t});
               }
             });
         })
