@@ -1,6 +1,7 @@
 'use strict';
 
 const Joi = require('joi');
+const Boom = require('boom');
 const {Player, sequelize} = require('../models');
 
 module.exports = [
@@ -23,9 +24,9 @@ module.exports = [
             const {playerId, balance} = user;
             return reply({playerId, balance});
           }
-          return reply().code(404);
+          return reply(Boom.notFound(`Player with id:${playerId} does not exist`));
         })
-        .catch(() => reply().code(500));
+        .catch((err) => reply(Boom.wrap(err)));
     }
   },
 
@@ -56,14 +57,14 @@ module.exports = [
                     .then(() => reply());
                 }
 
-                return reply().code(400);
+                return reply(Boom.badRequest(`Player id:${playerId} has not enough balance`));
               }
 
-              return reply().code(404);
+              return reply(Boom.notFound(`Player with id:${playerId} does not exist`));
             });
         })
         .catch((err) => {
-          return reply().code(500);
+          return reply(Boom.wrap(err));
         });
     }
   },
@@ -98,7 +99,7 @@ module.exports = [
         })
         .then(() => reply())
         .catch((err) => {
-          return reply().code(500);
+          return reply(Boom.wrap(err));
         });
     }
   }

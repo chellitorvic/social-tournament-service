@@ -1,5 +1,6 @@
 'use strict';
 
+const Boom = require('boom');
 const {sequelize} = require('../models');
 
 module.exports = [
@@ -10,7 +11,7 @@ module.exports = [
       sequelize
         .sync({force: true})
         .then(() => reply())
-        .catch(() => reply().code(500));
+        .catch((err) => reply(Boom.wrap(err)));
     }
   }
 ];
