@@ -48,19 +48,15 @@ module.exports = [
           return Player
             .findById(playerId, {transaction: t, lock: {level: t.LOCK.UPDATE}})
             .then((player) => {
-              if (player) {
-                const balance = player.balance;
+              if (!player) return reply(Boom.notFound(`Player with id:${playerId} does not exist`));
 
-                if (balance - points >= 0) {
-                  return Player
-                    .take(playerId, points, {transaction: t})
-                    .then(() => reply());
-                }
-
+              if (player.balance - points < 0) {
                 return reply(Boom.badRequest(`Player id:${playerId} has not enough balance`));
               }
 
-              return reply(Boom.notFound(`Player with id:${playerId} does not exist`));
+              return Player
+                .take(playerId, points, {transaction: t})
+                .then(() => reply());
             });
         })
         .catch((err) => {
