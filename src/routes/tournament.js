@@ -49,8 +49,8 @@ module.exports = [
           return Promise
             .all([
               Tournament.findById(tournamentId, {transaction: t}),
-              Player.findById(playerId, {transaction: t}),
-              Player.findAll({where: {playerId: {$in: backerId}}}, {transaction: t}),
+              Player.findById(playerId, {transaction: t, lock: {level: t.LOCK.UPDATE}}),
+              Player.findAll({where: {playerId: {$in: backerId}}, transaction: t, lock: {level: t.LOCK.UPDATE}}),
             ])
             .then(([tournament, player, backers]) => {
               if (!tournament || !tournament.open || !player || backers.length !== backerId.length) {
@@ -110,8 +110,12 @@ module.exports = [
         .transaction(function (t) {
           return Promise
             .all([
-              Tournament.findById(tournamentId, {transaction: t}),
-              Participation.findAll({where: {playerId: {$in: playerIds}}}, {transaction: t})
+              Tournament.findById(tournamentId, {transaction: t, lock: {level: t.LOCK.UPDATE}}),
+              Participation.findAll({
+                where: {playerId: {$in: playerIds}},
+                transaction: t,
+                lock: {level: t.LOCK.UPDATE}
+              })
             ])
             .then(([tournament, participations]) => {
               if (!tournament || !tournament.open || participations.length !== winners.length) {
@@ -124,13 +128,18 @@ module.exports = [
                   const givePrizes = participations
                     .map((p) => {
                       return Promise
-                        .all([p.getPlayer({transaction: t}), p.getBackers({transaction: t})])
+                        .all([
+                          p.getPlayer({transaction: t, lock: {level: t.LOCK.UPDATE}}),
+                          p.getBackers({transaction: t, lock: {level: t.LOCK.UPDATE}})
+                        ])
                         .then(([player, backers]) => {
                           const players = [player, ...backers];
                           const part = winnerPrizes[player.playerId] / players.length;
+
                           const updateBalances = players.map((player) => {
                             return Player.fund(player.playerId, part, {transaction: t});
                           });
+
                           return Promise.all(updateBalances);
                         });
                     });

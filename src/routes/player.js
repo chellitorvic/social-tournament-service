@@ -45,21 +45,26 @@ module.exports = [
       sequelize
         .transaction(function (t) {
           return Player
-            .findById(playerId, {transaction: t})
+            .findById(playerId, {transaction: t, lock: {level: t.LOCK.UPDATE}})
             .then((player) => {
               if (player) {
                 const balance = player.balance;
+
                 if (balance - points >= 0) {
                   return Player
                     .take(playerId, points, {transaction: t})
                     .then(() => reply());
                 }
+
                 return reply().code(400);
               }
+
               return reply().code(404);
             });
         })
-        .catch(() => reply().code(500));
+        .catch((err) => {
+          return reply().code(500);
+        });
     }
   },
 
@@ -79,7 +84,12 @@ module.exports = [
       sequelize
         .transaction(function (t) {
           return Player
-            .findOrCreate({where: {playerId}, defaults: {playerId, balance: points}, transaction: t})
+            .findOrCreate({
+              where: {playerId},
+              defaults: {playerId, balance: points},
+              transaction: t,
+              lock: {level: t.LOCK.UPDATE}
+            })
             .spread((player, created) => {
               if (!created) {
                 return Player.fund(playerId, points, {transaction: t});
