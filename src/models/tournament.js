@@ -17,5 +17,16 @@ module.exports = function (sequelize, DataTypes) {
       defaultValue: true
     }
   });
+
+  /**
+   * Calculate amount of points each of n players must pay to join tournament
+   *
+   * @param n
+   * @returns {number}
+   */
+  Tournament.prototype.calcDeposit = function calcDeposit(n) {
+    return this.deposit / n;
+  };
+
   return Tournament;
 };

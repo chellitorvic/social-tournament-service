@@ -72,7 +72,7 @@ module.exports = [
               }
 
               const participants = [player, ...backers];
-              const part = tournament.deposit / participants.length;
+              const part = tournament.calcDeposit(participants.length);
               if (participants.some((p) => (p.balance < part))) {
                 return reply(Boom.badRequest('One or more players have not enough balance'));
               }
@@ -149,22 +149,11 @@ module.exports = [
                 .update({open: false}, {transaction: t})
                 .then(() => {
                   const givePrizes = participations
-                    .map((p) => {
-                      return Promise
-                        .all([
-                          p.getPlayer({transaction: t, lock: {level: t.LOCK.UPDATE}}),
-                          p.getBackers({transaction: t, lock: {level: t.LOCK.UPDATE}})
-                        ])
-                        .then(([player, backers]) => {
-                          const players = [player, ...backers];
-                          const part = winnerPrizes[player.playerId] / players.length;
-
-                          const updateBalances = players.map((player) => {
-                            return Player.fund(player.playerId, part, {transaction: t});
-                          });
-
-                          return Promise.all(updateBalances);
-                        });
+                    .map((participation) => {
+                      return participation.givePrize(winnerPrizes[participation.playerId], {
+                        transaction: t,
+                        lock: {level: t.LOCK.UPDATE}
+                      });
                     });
                   return Promise.all(givePrizes);
                 })
