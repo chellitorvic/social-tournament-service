@@ -16,16 +16,9 @@ module.exports = [
       }
     },
     handler(request, reply) {
-      const {playerId} = request.query;
       Player
-        .findById(playerId)
-        .then((user) => {
-          if (user) {
-            const {playerId, balance} = user;
-            return reply({playerId, balance});
-          }
-          return reply(Boom.notFound(`Player with id:${playerId} does not exist`));
-        })
+        .balance(request.query.playerId)
+        .then((balance) => reply(balance))
         .catch((err) => reply(Boom.wrap(err)));
     }
   },
@@ -44,24 +37,9 @@ module.exports = [
     handler(request, reply) {
       const {playerId, points} = request.query;
       sequelize
-        .transaction(function (t) {
-          return Player
-            .findById(playerId, {transaction: t, lock: {level: t.LOCK.UPDATE}})
-            .then((player) => {
-              if (!player) return reply(Boom.notFound(`Player with id:${playerId} does not exist`));
-
-              if (player.balance - points < 0) {
-                return reply(Boom.badRequest(`Player id:${playerId} has not enough balance`));
-              }
-
-              return Player
-                .take(playerId, points, {transaction: t})
-                .then(() => reply());
-            });
-        })
-        .catch((err) => {
-          return reply(Boom.wrap(err));
-        });
+        .transaction(t => Player.take(playerId, points, {transaction: t, lock: {level: t.LOCK.UPDATE}}))
+        .then(() => reply())
+        .catch((err) => reply(Boom.wrap(err)));
     }
   },
 
@@ -79,24 +57,9 @@ module.exports = [
     handler(request, reply) {
       const {playerId, points} = request.query;
       sequelize
-        .transaction(function (t) {
-          return Player
-            .findOrCreate({
-              where: {playerId},
-              defaults: {playerId, balance: points},
-              transaction: t,
-              lock: {level: t.LOCK.UPDATE}
-            })
-            .spread((player, created) => {
-              if (!created) {
-                return Player.fund(playerId, points, {transaction: t});
-              }
-            });
-        })
+        .transaction(t => Player.fund(playerId, points, {transaction: t, lock: {level: t.LOCK.UPDATE}}))
         .then(() => reply())
-        .catch((err) => {
-          return reply(Boom.wrap(err));
-        });
+        .catch((err) => reply(Boom.wrap(err)));
     }
   }
 ];

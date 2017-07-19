@@ -57,7 +57,7 @@ module.exports = function (sequelize, DataTypes) {
         const part = prize / players.length;
 
         const updateBalances = players.map((player) => {
-          return models.Player.fund(player.playerId, part, options);
+          return models.Player.incrementBalance(player.playerId, part, options);
         });
 
         return Promise.all(updateBalances);

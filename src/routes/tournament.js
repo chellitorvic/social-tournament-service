@@ -24,9 +24,8 @@ module.exports = [
           if (!created) {
             return reply(Boom.badRequest(`Tournament with id:${tournamentId} already exists`));
           }
-
-          return reply();
         })
+        .then(() => reply())
         .catch((err) => reply(Boom.wrap(err)));
     }
   },
@@ -86,12 +85,14 @@ module.exports = [
 
                   return participation
                     .setBackers(backers, {transaction: t})
-                    .then(() => Promise.all(participants.map(p => Player.take(p.playerId, part, {transaction: t}))))
-                    .then(() => {
-                      return reply();
-                    });
+                    .then(() => Promise.all(participants.map(p => {
+                      return Player.incrementBalance(p.playerId, -part, {transaction: t});
+                    })));
                 });
             });
+        })
+        .then(() => {
+          return reply();
         })
         .catch((err) => {
           return reply(Boom.wrap(err));
@@ -157,10 +158,10 @@ module.exports = [
                     });
                   return Promise.all(givePrizes);
                 })
-                .then(() => tournament.destroy({transaction: t}))
-                .then(() => reply());
+                .then(() => tournament.destroy({transaction: t}));
             })
         })
+        .then(() => reply())
         .catch((err) => {
           return reply(Boom.wrap(err));
         });
