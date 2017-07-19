@@ -24,6 +24,7 @@ module.exports = [
           if (!created) {
             return reply(Boom.badRequest(`Tournament with id:${tournamentId} already exists`));
           }
+
           return reply();
         })
         .catch((err) => reply(Boom.wrap(err)));
@@ -133,7 +134,7 @@ module.exports = [
             ])
             .then(([tournament, participations]) => {
               if (!tournament) {
-                return reply(Boom.badRequest(`Tournament with id:${tournamentId} does not exist`));
+                return reply(Boom.notFound(`Tournament with id:${tournamentId} does not exist`));
               }
 
               if (!tournament.open) {
