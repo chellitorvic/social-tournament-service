@@ -24,7 +24,7 @@ module.exports = function (sequelize, DataTypes) {
    * @param options
    * @returns {Promise.<*>}
    */
-  Player.incrementBalance = function take(playerId, points, options) {
+  Player.incrementBalance = function take(playerId, points, options = {}) {
     return this.increment('balance', Object.assign({by: points, where: {playerId}}, options));
   };
 
@@ -36,7 +36,7 @@ module.exports = function (sequelize, DataTypes) {
    * @param options
    * @returns {Promise.<*>}
    */
-  Player.take = function take(playerId, points, options) {
+  Player.take = function take(playerId, points, options = {}) {
     return Player
       .findById(playerId, options)
       .then((player) => {
@@ -58,7 +58,7 @@ module.exports = function (sequelize, DataTypes) {
    * @param options
    * @returns {Promise.<*>}
    */
-  Player.fund = function (playerId, points, options) {
+  Player.fund = function (playerId, points, options = {}) {
     return Player
       .findOrCreate(Object.assign({
         where: {playerId},
@@ -85,7 +85,7 @@ module.exports = function (sequelize, DataTypes) {
           throw Boom.notFound(`Player with id:${playerId} does not exist`);
         }
         return {playerId, balance: user.balance};
-      })
+      });
   };
 
   return Player;

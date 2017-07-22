@@ -32,7 +32,7 @@ module.exports = function (sequelize, DataTypes) {
    * @param options
    * @returns {Promise.<Player[]>}
    */
-  Participation.prototype.getPlayers = function getPlayers(options) {
+  Participation.prototype.getPlayers = function getPlayers(options = {}) {
     return Promise
       .all([
         this.getPlayer(options),
@@ -50,7 +50,7 @@ module.exports = function (sequelize, DataTypes) {
    * @param options
    * @returns {Promise.<*>}
    */
-  Participation.prototype.givePrize = function givePrize(prize, options) {
+  Participation.prototype.givePrize = function givePrize(prize, options = {}) {
     return this
       .getPlayers(options)
       .then((players) => {
