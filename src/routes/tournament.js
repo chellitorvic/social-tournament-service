@@ -2,7 +2,7 @@
 
 const Joi = require('joi');
 const Boom = require('boom');
-const {Player, Tournament, Participation, sequelize} = require('../models');
+const {Tournament, sequelize} = require('../models');
 
 module.exports = [
   {
@@ -19,12 +19,7 @@ module.exports = [
     handler(request, reply) {
       const {tournamentId, deposit} = request.query;
       Tournament
-        .findOrCreate({where: {tournamentId}, defaults: {tournamentId, deposit}})
-        .spread((tournament, created) => {
-          if (!created) {
-            return reply(Boom.badRequest(`Tournament with id:${tournamentId} already exists`));
-          }
-        })
+        .announce(tournamentId, deposit)
         .then(() => reply())
         .catch((err) => reply(Boom.wrap(err)));
     }
@@ -46,57 +41,12 @@ module.exports = [
       const {tournamentId, playerId, backerId /*array*/} = request.query;
 
       sequelize
-        .transaction(function (t) {
-          return Promise
-            .all([
-              Tournament.findById(tournamentId, {transaction: t}),
-              Player.findById(playerId, {transaction: t, lock: {level: t.LOCK.UPDATE}}),
-              Player.findAll({where: {playerId: {$in: backerId}}, transaction: t, lock: {level: t.LOCK.UPDATE}}),
-            ])
-            .then(([tournament, player, backers]) => {
-              if (!tournament) {
-                return reply(Boom.badRequest(`Tournament with id:${tournamentId} does not exist`));
-              }
-
-              if (!tournament.open) {
-                return reply(Boom.badRequest(`Tournament with id:${tournamentId} is already closed`));
-              }
-
-              if (!player) {
-                return reply(Boom.badRequest(`Player with id:${playerId} does not exist`));
-              }
-
-              if (backers.length !== backerId.length) {
-                return reply(Boom.badRequest(`One or more backers does not exist`));
-              }
-
-              const participants = [player, ...backers];
-              const part = tournament.calcDeposit(participants.length);
-              if (participants.some((p) => (p.balance < part))) {
-                return reply(Boom.badRequest('One or more players have not enough balance'));
-              }
-
-              return Participation
-                .findOrCreate({where: {tournamentId, playerId}, defaults: {tournamentId, playerId}, transaction: t})
-                .spread((participation, created) => {
-                  if (!created) {
-                    return reply(Boom.badRequest(`Player is already joined this tournament`));
-                  }
-
-                  return participation
-                    .setBackers(backers, {transaction: t})
-                    .then(() => Promise.all(participants.map(p => {
-                      return Player.incrementBalance(p.playerId, -part, {transaction: t});
-                    })));
-                });
-            });
-        })
-        .then(() => {
-          return reply();
-        })
-        .catch((err) => {
-          return reply(Boom.wrap(err));
-        });
+        .transaction(t => Tournament.join(tournamentId, playerId, backerId, {
+          transaction: t,
+          lock: {level: t.LOCK.UPDATE}
+        }))
+        .then(() => reply())
+        .catch((err) => reply(Boom.wrap(err)));
     }
   },
 
@@ -116,55 +66,10 @@ module.exports = [
     },
     handler(request, reply) {
       const {tournamentId, winners} = request.payload;
-      const playerIds = winners.map(winner => winner.playerId);
-      const winnerPrizes = winners.reduce((memo, {playerId, prize}) => {
-        memo[playerId] = prize;
-        return memo;
-      }, {});
-
       sequelize
-        .transaction(function (t) {
-          return Promise
-            .all([
-              Tournament.findById(tournamentId, {transaction: t, lock: {level: t.LOCK.UPDATE}}),
-              Participation.findAll({
-                where: {playerId: {$in: playerIds}},
-                transaction: t,
-                lock: {level: t.LOCK.UPDATE}
-              })
-            ])
-            .then(([tournament, participations]) => {
-              if (!tournament) {
-                return reply(Boom.notFound(`Tournament with id:${tournamentId} does not exist`));
-              }
-
-              if (!tournament.open) {
-                return reply(Boom.badRequest(`Tournament with id:${tournamentId} is already closed`));
-              }
-
-              if (participations.length !== winners.length) {
-                return reply(Boom.badRequest(`One or more winners have not joined tournament`));
-              }
-
-              return tournament
-                .update({open: false}, {transaction: t})
-                .then(() => {
-                  const givePrizes = participations
-                    .map((participation) => {
-                      return participation.givePrize(winnerPrizes[participation.playerId], {
-                        transaction: t,
-                        lock: {level: t.LOCK.UPDATE}
-                      });
-                    });
-                  return Promise.all(givePrizes);
-                })
-                .then(() => tournament.destroy({transaction: t}));
-            })
-        })
+        .transaction(t => Tournament.result(tournamentId, winners, {transaction: t, lock: {level: t.LOCK.UPDATE}}))
         .then(() => reply())
-        .catch((err) => {
-          return reply(Boom.wrap(err));
-        });
+        .catch((err) => reply(Boom.wrap(err)));
     }
   }
 ];
