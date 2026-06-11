@@ -12,7 +12,7 @@
   "dependencies": {
     "boom": "^5.1.0",
     "hapi": "16.4.3",
-    "joi": "10.6.0",
+    "joi": "18.2.1",
     "pg": "7.12.1",
     "pg-hstore": "2.3.2",
     "sequelize": "5.21.1"
